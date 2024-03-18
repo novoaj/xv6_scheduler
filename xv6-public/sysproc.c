@@ -109,6 +109,13 @@ sys_uptime(void)
 // minit
 int 
 sys_minit(void){
+  // take a look at how sleeplock.c is written. sleeplock.c is for kernel space, we are doing similar logic for user space
+  mutex* m;
+  argptr(0, (void*)&m, sizeof(mutex*));
+  m->state = 0;
+  m->ownership = 0;
+  // each thread has a proc struct associated with it. do we need lock variables in proc struct?
+  
   return -1;
 }
 
