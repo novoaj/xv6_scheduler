@@ -112,21 +112,25 @@ sys_minit(void){
   // take a look at how sleeplock.c is written. sleeplock.c is for kernel space, we are doing similar logic for user space
   mutex* m;
   argptr(0, (void*)&m, sizeof(mutex*));
-  m->state = 0;
-  m->ownership = 0;
+  m->state = 0; // is lock in use
+  m->ownership = 0; // who owns this lock
   // each thread has a proc struct associated with it. do we need lock variables in proc struct?
-  
+
   return -1;
 }
 
 // macquire
 int 
 sys_macquire(void){
+  // is lock already in use?
+  // if so sleep until we can acquire
   return -1;
 }
 
 // mrelease
 int 
 sys_mrelease(void){
+  // only can release if we own this lock
+  // release lock, mark as not used, wake other threads?
   return -1;
 }
