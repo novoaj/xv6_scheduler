@@ -6,6 +6,7 @@
 #include "memlayout.h"
 #include "mmu.h"
 #include "proc.h"
+#include "umutex.h"
 
 int
 sys_fork(void)
@@ -103,4 +104,22 @@ sys_uptime(void)
   xticks = ticks;
   release(&tickslock);
   return xticks;
+}
+
+// minit
+int 
+sys_minit(void){
+  return -1;
+}
+
+// macquire
+int 
+sys_macquire(void){
+  return -1;
+}
+
+// mrelease
+int 
+sys_mrelease(void){
+  return -1;
 }
