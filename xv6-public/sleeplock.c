@@ -22,9 +22,9 @@ initsleeplock(struct sleeplock *lk, char *name)
 void
 acquiresleep(struct sleeplock *lk)
 {
-  acquire(&lk->lk);
+  acquire(&lk->lk); // acquires the spinlock that protects the sleeplock
   while (lk->locked) {
-    sleep(lk, &lk->lk);
+    sleep(lk, &lk->lk); // if this lock is already held, this thread is put to "sleep"
   }
   lk->locked = 1;
   lk->pid = myproc()->pid;
@@ -37,7 +37,7 @@ releasesleep(struct sleeplock *lk)
   acquire(&lk->lk);
   lk->locked = 0;
   lk->pid = 0;
-  wakeup(lk);
+  wakeup(lk); // wakes up a thread using "chan" field in proc struct
   release(&lk->lk);
 }
 
