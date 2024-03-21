@@ -32,6 +32,7 @@ int main() {
 
   wait();
   wait();
-  printf(1,"%d",shared_variable);
+  printf(1,"%d\n",shared_variable);
+  nice(1);
   exit();
 }

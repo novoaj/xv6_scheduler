@@ -155,3 +155,13 @@ sys_mrelease(void){
   
   return 0;
 }
+
+int 
+sys_nice(void){
+  int inc;
+  argint(0, &inc);
+
+  
+  cprintf("nice sys call\n");
+  return -1;
+}
