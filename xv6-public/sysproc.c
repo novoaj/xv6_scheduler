@@ -160,8 +160,12 @@ int
 sys_nice(void){
   int inc;
   argint(0, &inc);
-
-  
-  cprintf("nice sys call\n");
-  return -1;
+  struct proc *p = myproc();
+  // can we increment nice val? needs to stay in range -20 to 19
+  if (p->nice + inc > 19 || p->nice + inc < -20){
+    return -1;
+  } 
+  // do we worry about atomicity between if statement and reassigning nice val?
+  p->nice = p->nice + inc; // reassign nice val of this proc
+  return 0;
 }

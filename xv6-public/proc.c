@@ -114,6 +114,7 @@ found:
 
   sp -= sizeof *p->context;
   p->context = (struct context*)sp;
+  p->nice = 0; // init nice val
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
 
