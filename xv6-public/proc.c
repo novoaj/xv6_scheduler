@@ -391,41 +391,48 @@ wait(void)
 //  - swtch to start running that process
 //  - eventually that process transfers control
 //      via swtch back to the scheduler.
-void
-scheduler(void)
+void scheduler(void)
 {
   struct proc *p;
   struct cpu *c = mycpu();
   c->proc = 0;
-  
+
   for(;;){
     // Enable interrupts on this processor.
     sti();
+    struct proc *highest_priority_proc = 0;
 
-    // Loop over process table looking for process to run.
+    // Loop over process table looking for the process with the highest priority (lowest nice value)
     acquire(&ptable.lock);
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)
         continue;
+      // Checks priority level
+      if (!highest_priority_proc || p->nice < highest_priority_proc->nice) {
+        highest_priority_proc = p;
+      } else if (p->nice == highest_priority_proc->nice) {
+        // For processes with the same nice value
+        // Need to break tie here
+      }
+    }
 
-      // Switch to chosen process.  It is the process's job
-      // to release ptable.lock and then reacquire it
-      // before jumping back to us.
+    if (highest_priority_proc) {
+      // Switch to chosen process.
+      p = highest_priority_proc;
       c->proc = p;
       switchuvm(p);
       p->state = RUNNING;
-
+      
       swtch(&(c->scheduler), p->context);
       switchkvm();
 
       // Process is done running for now.
-      // It should have changed its p->state before coming back.
       c->proc = 0;
     }
     release(&ptable.lock);
-
   }
 }
+
 
 // Enter scheduler.  Must hold only ptable.lock
 // and have changed proc->state. Saves and restores
