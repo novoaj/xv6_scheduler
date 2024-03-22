@@ -160,16 +160,23 @@ int
 sys_nice(void){
   int inc;
   argint(0, &inc);
-  struct proc *p = myproc();
+  struct spinlock sl;
+
+  // struct proc *p = myproc();
+  
   // can we increment nice val? needs to stay in range -20 to 19
-  if (p->nice + inc > 19){
-   p->nice = 19;
-  }else if(p->nice + inc < -20){
-    p->nice = -20;
+  initlock(&sl, "nice spin lock");
+  acquire(&sl);
+  if (myproc()->nice + inc > 19){
+   myproc()->nice = 19;
+  }else if(myproc()->nice + inc < -20){
+    myproc()->nice = -20;
   }
   else{
-    p->nice = p->nice + inc;
+    myproc()->nice = myproc()->nice + inc;
   }
+  release(&sl);
+
   // do we worry about atomicity between if statement and reassigning nice val?
    // reassign nice val of this proc
   return 0;

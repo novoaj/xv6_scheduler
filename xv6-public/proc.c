@@ -391,78 +391,48 @@ wait(void)
 //  - swtch to start running that process
 //  - eventually that process transfers control
 //      via swtch back to the scheduler.
-void
-scheduler(void)
+void scheduler(void)
 {
   struct proc *p;
   struct cpu *c = mycpu();
   c->proc = 0;
-  
+
   for(;;){
     // Enable interrupts on this processor.
     sti();
+    struct proc *highest_priority_proc = 0;
 
-    // Might be some sort of concurrency bug in my logic here. not sure if we need to use another lock other than just the ptable lock?
-    // might be getting deadlock here? inconsistency in how many tests are passed/failed with this chunk of code. must be concurrency bugs
-    // not sure what locks we are supposed to use
-    // Loop over process table looking for process to run. 
+    // Loop over process table looking for the process with the highest priority (lowest nice value)
     acquire(&ptable.lock);
-    // find highest priority, runnable p in the ptable:
-    int highestPriority = 20;
-    c->proc = 0;
-    struct proc *toSchedule = 0;
-    for(p=ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if (p->state != RUNNABLE){
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      if(p->state != RUNNABLE)
         continue;
-      }else{
-        if (p->nice < highestPriority){
-          // cprintf("this proc name: %s\n", myproc()->name);
-          cprintf("%s\n",p->name);
-          cprintf("nice val: %d\n", p->nice);
-          cprintf("highestPriority before reassign: %d\n", highestPriority);
-          highestPriority = p->nice;
-          toSchedule = p;
-        }
+      // Checks priority level
+      if (!highest_priority_proc || p->nice < highest_priority_proc->nice) {
+        highest_priority_proc = p;
+      } else if (p->nice == highest_priority_proc->nice) {
+        // For processes with the same nice value
+        // Need to break tie here
+        // on ties we need to revert to round robin (take earlier appearing process)
       }
     }
-    if (toSchedule != 0) {
-      c->proc = toSchedule;
-      switchuvm(toSchedule);
-      toSchedule->state = RUNNING;
 
-      swtch(&(c->scheduler), toSchedule->context);
+    if (highest_priority_proc) {
+      // Switch to chosen process.
+      p = highest_priority_proc;
+      c->proc = p;
+      switchuvm(p);
+      p->state = RUNNING;
+      
+      swtch(&(c->scheduler), p->context);
       switchkvm();
       // Process is done running for now.
-      // It should have changed its p->state before coming back.
       c->proc = 0;
     }
-    
-    // Process is done running for now.
-    // It should have changed its p->state before coming back.
-    // original xv6 code:
-    // c->proc = 0;
-    // for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-    //   if(p->state != RUNNABLE) // finds first runnable process and runs it
-    //     continue;
-    //   // is this p->nice high priority?
-    //   // Switch to chosen process.  It is the process's job
-    //   // to release ptable.lock and then reacquire it
-    //   // before jumping back to us.
-    //   c->proc = p;
-    //   switchuvm(p);
-    //   p->state = RUNNING;
-
-    //   swtch(&(c->scheduler), p->context);
-    //   switchkvm();
-
-    //   // Process is done running for now.
-    //   // It should have changed its p->state before coming back.
-    //   c->proc = 0;
-    // }
     release(&ptable.lock);
-
   }
 }
+
 
 // Enter scheduler.  Must hold only ptable.lock
 // and have changed proc->state. Saves and restores
