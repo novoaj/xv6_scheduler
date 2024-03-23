@@ -1,2 +1,3 @@
 https://www.geeksforgeeks.org/xv6-operating-system-adding-a-new-system-call/
 https://www.cse.iitb.ac.in/~mythili/teaching/cs347_autumn2016/notes/06-xv6-sched-sync.pdf
+https://medium.com/@harshalshree03/xv6-implementing-ps-nice-system-calls-and-priority-scheduling-b12fa10494e4

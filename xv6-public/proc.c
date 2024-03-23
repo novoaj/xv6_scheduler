@@ -393,31 +393,31 @@ wait(void)
 //      via swtch back to the scheduler.
 void scheduler(void)
 {
-  struct proc *p;
+  struct proc *p, *p1;
   struct cpu *c = mycpu();
   c->proc = 0;
 
   for(;;){
     // Enable interrupts on this processor.
     sti();
-    struct proc *highest_priority_proc = 0;
+    struct proc *highest_priority_proc;
 
     // Loop over process table looking for the process with the highest priority (lowest nice value)
     acquire(&ptable.lock);
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)
         continue;
-      // Checks priority level
-      if (!highest_priority_proc || p->nice < highest_priority_proc->nice) {
-        highest_priority_proc = p;
-      } else if (p->nice == highest_priority_proc->nice) {
-        // For processes with the same nice value
-        // Need to break tie here
-        // on ties we need to revert to round robin (take earlier appearing process)
-      }
-    }
 
-    if (highest_priority_proc) {
+      // find high priority process to run
+      highest_priority_proc = p;
+      for(p1 = ptable.proc; p1 < &ptable.proc[NPROC]; p1++){
+        if(p1->state != RUNNABLE)
+          continue;
+        if (highest_priority_proc->nice > p1->nice){ // lower means higher prioirty
+          highest_priority_proc = p1;
+        }
+      }  
+
       // Switch to chosen process.
       p = highest_priority_proc;
       c->proc = p;
