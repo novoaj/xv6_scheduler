@@ -162,7 +162,10 @@ sys_mrelease(void){
   acquire(&m->lk);
   m->state = 0;
   m->ownership = 0;
+  // not sure if this is the right way to be mutating the porc struct
+  // maybe we need to use ptable lock and access lock directly from ptable
   myproc()->isWaiting = 0; // this process is no longer waiting to acquire the sleeplock
+  myproc()->nice = 0; // restore nice value of proc on release to 0?
   wakeup(m); // wakes up a thread using "chan" field in proc struct, broadcasts to all threads
   release(&m->lk);
   
