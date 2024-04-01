@@ -115,6 +115,7 @@ found:
   sp -= sizeof *p->context;
   p->context = (struct context*)sp;
   p->nice = 0; // init nice val
+  p->isWaiting = 0; // init isWaiting for this proc to no
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
 
@@ -411,7 +412,15 @@ void scheduler(void)
       // find high priority process to run
       // when finding highestpriorityproc, need to keep in mind priority inheritance
       // doesn't mean changing nice values, but considering what threads are waiting for this one?
-      
+      // figure out nice value of threads waiting?
+      // how do we know what procs are trying to acquire this lock?
+      // some sort of lock identifier? or lock struct associated with each proc? 
+      // lock is global var, all threads competing for this lock
+      // if this proc doesn't have the lock (is waiting on it) then prioritize the proc holding the lock
+      // if proc is waiting to acquire our mutex, should be in a sleep state
+      // so maybe we don't simply skip all procs that aren't runnable and instead see 
+      // if it sleeping and waiting for our mutex and highpriority? if so find proc that holds lock and schedule it
+      // temp nice val of lock holder = min(nice of waiting threads)
       highest_priority_proc = p;
       for(p1 = ptable.proc; p1 < &ptable.proc[NPROC]; p1++){
         if(p1->state != RUNNABLE)

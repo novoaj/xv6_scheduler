@@ -137,8 +137,12 @@ sys_macquire(void){
 
   acquire(&m->lk); // acquires the spinlock that protects the sleeplock
   while (m->state) { // is lock already in use?
+    myproc()->isWaiting = 1; // this thread is waiting on the sleeplock
     sleep(m, &m->lk); // if this lock is already held, this thread is put to "sleep"
   }
+  // maybe store some sort of field in proc struct indicating if this proc is waiting for our sleeplock
+  // means intializing in allocproc, and mutating accordingly when acquiring and releasing for this proc
+  myproc()->isWaiting = 2; // 2 indicates that this proc is the lock holder
   m->state = 1;
   m->ownership = myproc()->pid;
   release(&m->lk);
@@ -158,7 +162,8 @@ sys_mrelease(void){
   acquire(&m->lk);
   m->state = 0;
   m->ownership = 0;
-  wakeup(m); // wakes up a thread using "chan" field in proc struct
+  myproc()->isWaiting = 0; // this process is no longer waiting to acquire the sleeplock
+  wakeup(m); // wakes up a thread using "chan" field in proc struct, broadcasts to all threads
   release(&m->lk);
   
   return 0;
@@ -169,13 +174,11 @@ sys_nice(void){
   int inc;
   argint(0, &inc);
   struct spinlock sl;
-
-  // struct proc *p = myproc();
   
   // can we increment nice val? needs to stay in range -20 to 19
   initlock(&sl, "nice spin lock");
   acquire(&sl);
-  cprintf("assigning nice value: proc: %d, nice: %d\n", myproc()->nice, inc);
+  cprintf("\nassigning nice value: proc: %d, nice: %d\n", myproc()->nice, inc);
   if (myproc()->nice + inc > 19){
    myproc()->nice = 19;
   }else if(myproc()->nice + inc < -20){
