@@ -421,11 +421,29 @@ void scheduler(void)
       // so maybe we don't simply skip all procs that aren't runnable and instead see 
       // if it sleeping and waiting for our mutex and highpriority? if so find proc that holds lock and schedule it
       // temp nice val of lock holder = min(nice of waiting threads)
+
+      // find the min nice of threads waiting for sleeplock (p->isWaiting = 1)
+      int min_nice_waiting = 20;
+      for(p1 = ptable.proc; p1 < &ptable.proc[NPROC]; p1++){
+        if (p1->isWaiting == 1){
+          if (min_nice_waiting > p1->nice){ // is this waiting process high priority?
+            min_nice_waiting = p1->nice;
+          }
+        }
+      } 
+      // if min_nice_waiting is 20 after loop then there is no threads waiting for sleeplock
+
+      // when we are shceduling, we will consider the p->isWaiting = 2 process with a different temp nice value
       highest_priority_proc = p;
       for(p1 = ptable.proc; p1 < &ptable.proc[NPROC]; p1++){
         if(p1->state != RUNNABLE)
           continue;
-        if (highest_priority_proc->nice > p1->nice){ // lower means higher prioirty
+
+        int temp_nice = p1->nice;
+        if (p1->isWaiting == 2){
+          temp_nice = min_nice_waiting;
+        }
+        if (highest_priority_proc->nice > temp_nice){ // lower means higher prioirty
           highest_priority_proc = p1;
         }
       }  
