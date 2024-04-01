@@ -57,7 +57,7 @@ struct proc {
   char name[MAXPROCNAMELEN];               // Process name (debugging)
   int nclone;                  // Number of clone calls on this proc (for grading)
   int sleepticks;              // Number of ticks left the process should sleep for
-  int nice;
+  int nice;                    // nice value indicates priority of this proc
 };
 typedef struct {
   struct spinlock lock;

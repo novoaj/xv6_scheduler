@@ -105,8 +105,10 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
-
-// minit
+/*
+  minit initializes our mutex struct with state = 0 (lock not held) and ownership = 0
+  returns 0 on success
+*/
 int 
 sys_minit(void){
   // take a look at how sleeplock.c is written. sleeplock.c is for kernel space, we are doing similar logic for user space
@@ -121,7 +123,11 @@ sys_minit(void){
   return 0;
 }
 
-// macquire
+/*
+  macquire system call acquires the mutex sleeplock and changes value of ptr to mutex in user program
+  stores values of state (1 for held) and ownership (pid)
+  returns 0 on success
+*/ 
 int 
 sys_macquire(void){
   // proc.c contains sleep and wakeup functions which will need to be used
@@ -139,8 +145,10 @@ sys_macquire(void){
   
   return 0;
 }
-
-// mrelease
+/*
+  mrelease takes the mutex as an argument as marks it as freed (state = 0), resets ownership to 0
+  returns 0 on success
+*/
 int 
 sys_mrelease(void){
   mutex* m;
@@ -167,6 +175,7 @@ sys_nice(void){
   // can we increment nice val? needs to stay in range -20 to 19
   initlock(&sl, "nice spin lock");
   acquire(&sl);
+  cprintf("assigning nice value: proc: %d, nice: %d\n", myproc()->nice, inc);
   if (myproc()->nice + inc > 19){
    myproc()->nice = 19;
   }else if(myproc()->nice + inc < -20){

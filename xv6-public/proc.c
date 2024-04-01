@@ -409,6 +409,9 @@ void scheduler(void)
         continue;
 
       // find high priority process to run
+      // when finding highestpriorityproc, need to keep in mind priority inheritance
+      // doesn't mean changing nice values, but considering what threads are waiting for this one?
+      
       highest_priority_proc = p;
       for(p1 = ptable.proc; p1 < &ptable.proc[NPROC]; p1++){
         if(p1->state != RUNNABLE)
