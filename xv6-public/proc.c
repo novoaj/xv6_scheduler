@@ -422,12 +422,14 @@ void scheduler(void)
       // if it sleeping and waiting for our mutex and highpriority? if so find proc that holds lock and schedule it
       // temp nice val of lock holder = min(nice of waiting threads)
 
-      // find the min nice of threads waiting for sleeplock (p->isWaiting = 1)
+      // find the min nice of thread waiting for sleeplock (p->isWaiting = 1)
       int min_nice_waiting = 20;
+      void* chan_waiting = 0;
       for(p1 = ptable.proc; p1 < &ptable.proc[NPROC]; p1++){
-        if (p1->isWaiting == 1){
+        if (p1->state == SLEEPING && p1->chan != 0){ // if sleeping and waiting for a lock
           if (min_nice_waiting > p1->nice){ // is this waiting process high priority?
             min_nice_waiting = p1->nice;
+            chan_waiting = p1->chan;
           }
         }
       } 
@@ -438,10 +440,12 @@ void scheduler(void)
       for(p1 = ptable.proc; p1 < &ptable.proc[NPROC]; p1++){
         if(p1->state != RUNNABLE)
           continue;
-
-        int temp_nice = p1->nice;
-        if (p1->isWaiting == 2){
-          temp_nice = min_nice_waiting;
+        
+        // how can we know if this thread is holding the lock? chan field?
+        // chan fields from waiting and holder process will be the same. they are waiting for the same lock
+        int temp_nice = p1->nice; 
+        if (chan_waiting != 0 && p1->chan == chan_waiting && p1->nice > min_nice_waiting){ // if this is the thread holding the lock
+          temp_nice = min_nice_waiting; // elevate the lock holders "nice" value
         }
         if (highest_priority_proc->nice > temp_nice){ // lower means higher prioirty
           highest_priority_proc = p1;

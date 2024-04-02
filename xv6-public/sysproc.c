@@ -118,6 +118,7 @@ sys_minit(void){
   initlock(&m->lk, "sleep lock");
   m->state = 0; // is lock in use
   m->ownership = 0; // who owns this lock - maybe pid?
+  m->waiting = 0;
   
   // each thread has a proc struct associated with it. do we need lock variables in proc struct?
   return 0;
@@ -137,14 +138,18 @@ sys_macquire(void){
 
   acquire(&m->lk); // acquires the spinlock that protects the sleeplock
   while (m->state) { // is lock already in use?
-    myproc()->isWaiting = 1; // this thread is waiting on the sleeplock
+    //myproc()->isWaiting = 1; // this thread is waiting on the sleeplock
+    cprintf("\nproc: %d is waiting for the sleeplock\n", myproc()->pid);
+    m->waiting = myproc()->pid; // mutex knows the process that is waiting to acquire
     sleep(m, &m->lk); // if this lock is already held, this thread is put to "sleep"
   }
   // maybe store some sort of field in proc struct indicating if this proc is waiting for our sleeplock
   // means intializing in allocproc, and mutating accordingly when acquiring and releasing for this proc
-  myproc()->isWaiting = 2; // 2 indicates that this proc is the lock holder
+  cprintf("\nproc: %d is acquiring the sleeplock\n", myproc()->pid);
   m->state = 1;
   m->ownership = myproc()->pid;
+  //myproc()->isWaiting = 2; // 2 indicates that this proc is the lock holder
+
   release(&m->lk);
   
   return 0;
@@ -160,12 +165,11 @@ sys_mrelease(void){
   // only can release if we own this lock
   // release lock, mark as not used, wake other threads?
   acquire(&m->lk);
+  cprintf("\nreleasing sleeplock for proc: %d\n", myproc()->pid);
   m->state = 0;
   m->ownership = 0;
-  // not sure if this is the right way to be mutating the porc struct
-  // maybe we need to use ptable lock and access lock directly from ptable
-  myproc()->isWaiting = 0; // this process is no longer waiting to acquire the sleeplock
-  myproc()->nice = 0; // restore nice value of proc on release to 0?
+
+  // instead of isWaiting field, we can use chan field which will be null or point to a lock? if the proc is waiting
   wakeup(m); // wakes up a thread using "chan" field in proc struct, broadcasts to all threads
   release(&m->lk);
   
@@ -181,7 +185,7 @@ sys_nice(void){
   // can we increment nice val? needs to stay in range -20 to 19
   initlock(&sl, "nice spin lock");
   acquire(&sl);
-  cprintf("\nassigning nice value: proc: %d, nice: %d\n", myproc()->nice, inc);
+  cprintf("\nassigning nice value: proc: %d, nice: %d\n", myproc()->pid, myproc()->nice + inc);
   if (myproc()->nice + inc > 19){
    myproc()->nice = 19;
   }else if(myproc()->nice + inc < -20){
