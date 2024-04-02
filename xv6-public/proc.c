@@ -115,7 +115,6 @@ found:
   sp -= sizeof *p->context;
   p->context = (struct context*)sp;
   p->nice = 0; // init nice val
-  p->isWaiting = 0; // init isWaiting for this proc to no
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
 
@@ -427,6 +426,15 @@ void scheduler(void)
       void* chan_waiting = 0;
       for(p1 = ptable.proc; p1 < &ptable.proc[NPROC]; p1++){
         if (p1->state == SLEEPING && p1->chan != 0){ // if sleeping and waiting for a lock
+        // https://piazza.com/class/lrl9gion4s33ro/post/787
+        // ^find phys addr of lock my using walkpgdir?
+        // is this process waiting for the sleeplock
+        // p1->chan should point to a lock
+        // how can we access our mutex? using chan? chan will point to our mutex? for this process
+          // int isWaiting = 0;
+          // for (int i = 0; i < 16; i++){
+          //   if ()
+          // }
           if (min_nice_waiting > p1->nice){ // is this waiting process high priority?
             min_nice_waiting = p1->nice;
             chan_waiting = p1->chan;

@@ -118,7 +118,9 @@ sys_minit(void){
   initlock(&m->lk, "sleep lock");
   m->state = 0; // is lock in use
   m->ownership = 0; // who owns this lock - maybe pid?
-  m->waiting = 0;
+  for (int i = 0; i < 16; i++){
+    m->waiting[i] = 0;
+  }
   
   // each thread has a proc struct associated with it. do we need lock variables in proc struct?
   return 0;
@@ -140,16 +142,22 @@ sys_macquire(void){
   while (m->state) { // is lock already in use?
     //myproc()->isWaiting = 1; // this thread is waiting on the sleeplock
     cprintf("\nproc: %d is waiting for the sleeplock\n", myproc()->pid);
-    m->waiting = myproc()->pid; // mutex knows the process that is waiting to acquire
+    for (int i = 0; i < 16; i++){
+      if (m->waiting[i] == 0){ // add this pid to our waiting array at an empty slot
+        m->waiting[i] = myproc()->pid; 
+      }
+    }
     sleep(m, &m->lk); // if this lock is already held, this thread is put to "sleep"
   }
-  // maybe store some sort of field in proc struct indicating if this proc is waiting for our sleeplock
-  // means intializing in allocproc, and mutating accordingly when acquiring and releasing for this proc
   cprintf("\nproc: %d is acquiring the sleeplock\n", myproc()->pid);
   m->state = 1;
   m->ownership = myproc()->pid;
-  //myproc()->isWaiting = 2; // 2 indicates that this proc is the lock holder
-
+  // this proc is no longer waiting
+  for (int i = 0; i < 16; i++){
+    if (m->waiting[i] == myproc()->pid){
+      m->waiting[i] = 0; 
+    }
+  }
   release(&m->lk);
   
   return 0;

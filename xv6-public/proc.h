@@ -58,7 +58,6 @@ struct proc {
   int nclone;                  // Number of clone calls on this proc (for grading)
   int sleepticks;              // Number of ticks left the process should sleep for
   int nice;                    // nice value indicates priority of this proc
-  int isWaiting;               // indicates if this proc is waiting for the sleeplock (0 for no 1 for yes, 2? if lockholder)
 };
 typedef struct {
   struct spinlock lock;
